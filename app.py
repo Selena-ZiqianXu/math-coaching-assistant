@@ -154,7 +154,6 @@ if "last_options" not in st.session_state:
     st.session_state.last_options = []
 
 client = get_client()
-result = call_assistant(client, st.session_state.messages)
 
 # --- Sidebar: reset button ---
 with st.sidebar:
@@ -201,7 +200,7 @@ if st.session_state.pending_input:
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
-                result = call_assistant(chat, user_text)
+                result = call_assistant(client, st.session_state.messages)
             except Exception as e:
                 result = {
                     "message": f"Sorry, I ran into an error talking to the model: {e}",
