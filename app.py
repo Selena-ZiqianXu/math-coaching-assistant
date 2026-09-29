@@ -90,15 +90,24 @@ RESPONSE_SCHEMA = {
 
 
 def get_client():
-    """Configure and return a Gemini API client using the key from secrets."""
-    api_key = st.secrets.get("GEMINI_API_KEY")
-    if not api_key:
-        st.error(
-            "No Gemini API key found. Add GEMINI_API_KEY to your "
-            ".streamlit/secrets.toml file (see README)."
-        )
-        st.stop()
-    return genai.Client(api_key=api_key)
+    """
+    Configure and return a Gemini API client using the key from secrets.
+    Cached in session_state so the same client (and its underlying network
+    connection) persists across Streamlit reruns. Without this, a fresh
+    client is created and garbage-collected on every rerun, which closes
+    the connection the session_state-stored chat object still relies on,
+    causing a "client has been closed" error on the second message.
+    """
+    if "client" not in st.session_state:
+        api_key = st.secrets.get("GEMINI_API_KEY")
+        if not api_key:
+            st.error(
+                "No Gemini API key found. Add GEMINI_API_KEY to your "
+                ".streamlit/secrets.toml file (see README)."
+            )
+            st.stop()
+        st.session_state.client = genai.Client(api_key=api_key)
+    return st.session_state.client
 
 
 def get_chat(client):
