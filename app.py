@@ -90,66 +90,48 @@ RESPONSE_SCHEMA = {
 
 
 def get_client():
-    """
-    Configure and return a Gemini API client using the key from secrets.
-    Cached in session_state so the same client (and its underlying network
-    connection) persists across Streamlit reruns. Without this, a fresh
-    client is created and garbage-collected on every rerun, which closes
-    the connection the session_state-stored chat object still relies on,
-    causing a "client has been closed" error on the second message.
-    """
-    if "client" not in st.session_state:
-        api_key = st.secrets.get("GEMINI_API_KEY")
-        if not api_key:
-            st.error(
-                "No Gemini API key found. Add GEMINI_API_KEY to your "
-                ".streamlit/secrets.toml file (see README)."
-            )
-            st.stop()
-        st.session_state.client = genai.Client(api_key=api_key)
-    return st.session_state.client
-
-
-def get_chat(client):
-    """
-    Return the chat session for this browser session, creating it once and
-    reusing it across Streamlit reruns via session_state. The google-genai
-    Chat object tracks conversation history internally, so we don't need to
-    rebuild it by hand on every turn.
-    """
-    if "chat" not in st.session_state:
-        config = types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            temperature=TEMPERATURE,
-            response_mime_type="application/json",
-            response_schema=RESPONSE_SCHEMA,
+    """Configure and return a fresh Gemini API client using the key from secrets."""
+    api_key = st.secrets.get("GEMINI_API_KEY")
+    if not api_key:
+        st.error(
+            "No Gemini API key found. Add GEMINI_API_KEY to your "
+            ".streamlit/secrets.toml file (see README)."
         )
-        st.session_state.chat = client.chats.create(model=MODEL_NAME, config=config)
-    return st.session_state.chat
+        st.stop()
+    return genai.Client(api_key=api_key)
+  
+
+def build_contents(messages):
+    """Convert our message list into the Content format the API expects."""
+    contents = []
+    for m in messages:
+        role = "model" if m["role"] == "assistant" else "user"
+        contents.append(types.Content(role=role, parts=[types.Part(text=m["content"])]))
+    return contents
 
 
-def call_assistant(chat, user_text):
+def call_assistant(client, messages):
     """
-    Send the student's message to Gemini and parse the JSON response.
-    Returns a dict with "message" (str) and "options" (list of str).
-    Falls back to a safe default if parsing fails, so the app never crashes
-    on a malformed model response.
+    Send the full conversation to Gemini (stateless call each time) and
+    parse the JSON response.
     """
-    response = chat.send_message(user_text)
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM_PROMPT,
+        temperature=TEMPERATURE,
+        response_mime_type="application/json",
+        response_schema=RESPONSE_SCHEMA,
+    )
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=build_contents(messages),
+        config=config,
+    )
     raw_text = (response.text or "").strip()
-
     try:
         parsed = json.loads(raw_text)
-        message = parsed.get("message", "")
-        options = parsed.get("options", []) or []
-        return {"message": message, "options": options}
+        return {"message": parsed.get("message", ""), "options": parsed.get("options", []) or []}
     except (json.JSONDecodeError, AttributeError):
-        return {
-            "message": raw_text
-            if raw_text
-            else "Sorry, something went wrong on my end. Could you try rephrasing that?",
-            "options": [],
-        }
+        return {"message": raw_text or "Sorry, something went wrong on my end.", "options": []}
 
 
 # ---------------------------------------------------------------------------
@@ -172,13 +154,13 @@ if "last_options" not in st.session_state:
     st.session_state.last_options = []
 
 client = get_client()
-chat = get_chat(client)
+result = call_assistant(client, st.session_state.messages)
 
 # --- Sidebar: reset button ---
 with st.sidebar:
     st.markdown("### Session")
     if st.button("🔄 Start a new problem"):
-        for key in ("messages", "pending_input", "last_options", "chat"):
+        for key in ("messages", "pending_input", "last_options"):
             st.session_state.pop(key, None)
         st.rerun()
 
