@@ -103,9 +103,14 @@ st.markdown(
     """
     <style>
     div.stButton > button {
-        white-space: normal;
-        height: auto;
-        word-wrap: break-word;
+        white-space: normal !important;
+        height: auto !important;
+        word-wrap: break-word !important;
+    }
+    div.stButton > button p {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
     }
     </style>
     """,
