@@ -18,26 +18,6 @@ prompts.
    of how you got there.
 4. Use the "Start a new problem" button in the sidebar to reset and begin a
    different problem.
-   
-### Run it locally (optional)
-If you'd rather run it yourself or look at the code in action:
-1. Get a free Gemini API key from [aistudio.google.com](https://aistudio.google.com) (click "Get API key" → "Create API key").
-2. Clone this repo and `cd` into it.
-3. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-4. Copy the secrets template and add your key:
-   ```
-   cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-   ```
-   Then open `.streamlit/secrets.toml` and paste your key in place of
-   `your-api-key-here`.
-5. Run the app:
-   ```
-   streamlit run app.py
-   ```
 
 
 ## Approach and key decisions
