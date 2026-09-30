@@ -6,6 +6,7 @@ giving them answers.
 """
 
 import json
+import html
 import streamlit as st
 from google import genai
 from google.genai import types
@@ -92,6 +93,13 @@ def call_assistant(client, messages):
         return {"message": raw_text or "Sorry, something went wrong on my end.", "options": []}
 
 
+def render_plain_text(text):
+    st.markdown(
+        f"<div style='white-space: pre-wrap;'>{html.escape(text)}</div>",
+        unsafe_allow_html=True,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Streamlit app
 # ---------------------------------------------------------------------------
@@ -146,7 +154,7 @@ if not st.session_state.messages:
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        st.write(msg["content"])
+        render_plain_text(msg["content"])
 
 # --- Render option buttons for the latest assistant turn, if any ---
 if st.session_state.last_options and st.session_state.messages:
@@ -171,7 +179,7 @@ if st.session_state.pending_input:
 
     st.session_state.messages.append({"role": "user", "content": user_text})
     with st.chat_message("user"):
-        st.write(user_text)
+        render_plain_text(user_text)
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
@@ -182,7 +190,7 @@ if st.session_state.pending_input:
                     "message": f"Sorry, I ran into an error talking to the model: {e}",
                     "options": [],
                 }
-        st.write(result["message"])
+        render_plain_text(result["message"])
 
     st.session_state.messages.append({"role": "assistant", "content": result["message"]})
     st.session_state.last_options = result["options"]
