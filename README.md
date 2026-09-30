@@ -1,4 +1,4 @@
-# Student Coaching Assistant
+# Math Coaching Assistant
 
 An AI-powered math coaching assistant for high school students, built for the
 AI Engineering take-home project. The assistant guides students to work
@@ -6,7 +6,30 @@ through problems themselves rather than handing them answers, using a
 diagnose-then-guide loop and multiple-choice questions instead of open-ended
 prompts.
 
+
+## How to run it
 **[Live Demo →](https://math-coaching-assistant-kwgnmavlutsvwojehvmawp.streamlit.app/)**
+### Run it locally (optional)
+If you'd rather run it yourself or look at the code in action:
+1. Clone this repo and `cd` into it.
+2. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+3. Get a free Gemini API key from [aistudio.google.com](https://aistudio.google.com)
+   (click "Get API key" → "Create API key").
+4. Copy the secrets template and add your key:
+   ```
+   cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+   ```
+   Then open `.streamlit/secrets.toml` and paste your key in place of
+   `your-api-key-here`.
+5. Run the app:
+   ```
+   streamlit run app.py
+   ```
+6. Type a math problem into the chat box to start, or tell the assistant
+   what topic you're stuck on.
 
 ## Approach and key decisions
 
@@ -35,6 +58,23 @@ instructs the model to recognize this pattern and temporarily step back to a
 more foundational question before returning to the original problem, rather
 than cycling through superficially different rephrasings of the same step.
 
+**Explicitly restating the current state of the problem at each step.**
+During testing, I noticed that once the conversation moved past 2-3 steps,
+it became hard to follow what the equation actually looked like at that
+point — the assistant would ask "what should we do to the right side?"
+without ever stating what the equation currently was. I updated the prompt
+to require the model to explicitly state the current form of the
+equation/expression after each operation, before presenting the next
+question, so a student isn't expected to track the arithmetic mentally on
+their own on top of the reasoning.
+
+**System prompt kept in a separate file, not embedded in the code.** The
+full system prompt lives in `system_prompt.md` rather than as a large string
+constant inside `app.py`. This keeps the prompt (which is the core design
+artifact of this project) readable on its own, versionable independently of
+application logic, and easy to iterate on without touching or risking
+breaking the Python code.
+
 **Structured JSON output, enforced by the API, not just requested in the
 prompt.** The model is asked to return a JSON object with a `message` field
 and an `options` field (empty when there's no multiple-choice question). This
@@ -54,7 +94,7 @@ option genuinely correct, distractors genuinely wrong) before each response.
 This doesn't guarantee correctness, but reduces the risk of the model
 guiding a student toward the wrong step.
 
-## What you'd improve with more time
+## What to improve with more time
 
 - **Verify math correctness independently of the LLM.** Right now, the
   assistant's math correctness depends entirely on the model's own reasoning
@@ -87,3 +127,4 @@ recommendation (a free, capable Gemini model).
 See `example_conversations/` for transcripts demonstrating the diagnose →
 multiple-choice → recap loop, including a case where the student struggles
 repeatedly and the assistant steps back to a foundational concept.
+
