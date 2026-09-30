@@ -6,27 +6,7 @@ through problems themselves rather than handing them answers, using a
 diagnose-then-guide loop and multiple-choice questions instead of open-ended
 prompts.
 
-## How to run it
-
-1. Clone this repo and `cd` into it.
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Get a free Gemini API key from [aistudio.google.com](https://aistudio.google.com)
-   (click "Get API key" → "Create API key").
-4. Copy the secrets template and add your key:
-   ```
-   cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-   ```
-   Then open `.streamlit/secrets.toml` and paste your key in place of
-   `your-api-key-here`.
-5. Run the app:
-   ```
-   streamlit run app.py
-   ```
-6. Type a math problem into the chat box to start, or tell the assistant
-   what topic you're stuck on.
+**[Live Demo →](https://math-coaching-assistant-kwgnmavlutsvwojehvmawp.streamlit.app/)**
 
 ## Approach and key decisions
 
