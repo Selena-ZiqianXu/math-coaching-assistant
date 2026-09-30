@@ -47,21 +47,21 @@ whatever the student says with a generic prompt, the system prompt requires
 the model to first work out the correct solution privately, then diagnose
 *which specific step* the student's input suggests they're stuck on, before
 responding. This mirrors how a real tutor would approach a student who says
-"I don't get it" — the first move is figuring out *what* they don't get, not
+"I don't get it": the first move is figuring out *what* they don't get, not
 guessing.
 
 **Multiple-choice over open-ended questions.** Early versions of this prompt
 used open-ended guiding questions (e.g. "What do you think we should do
 first?"). In practice, student answers to open-ended questions are hard to
-diagnose reliably — a vague or off-target answer doesn't tell you much. Multiple
-choice, where the wrong options are designed to reflect common
+diagnose reliably, since a vague or off-target answer doesn't tell you much.
+Multiple choice, where the wrong options are designed to reflect common
 misconceptions at that step, makes the student's specific error much easier
 to pinpoint, and turns every wrong answer into a diagnostic signal rather
 than a dead end.
 
 **Escalating to fundamentals when a student is stuck on the same type of
 step repeatedly.** A student who keeps missing "how to isolate a variable"
-across several attempts likely doesn't have an isolated procedural gap —
+across several attempts likely doesn't have an isolated procedural gap;
 they may not understand what an equation actually represents. The prompt
 instructs the model to recognize this pattern and temporarily step back to a
 more foundational question before returning to the original problem, rather
@@ -70,7 +70,7 @@ than cycling through superficially different rephrasings of the same step.
 **Explicitly restating the current state of the problem at each step.**
 During testing, I noticed that once the conversation moved past 2-3 steps,
 it became hard to follow what the equation actually looked like at that
-point — the assistant would ask "what should we do to the right side?"
+point: the assistant would ask "what should we do to the right side?"
 without ever stating what the equation currently was. I updated the prompt
 to require the model to explicitly state the current form of the
 equation/expression after each operation, before presenting the next
@@ -134,6 +134,5 @@ recommendation (a free, capable Gemini model).
 ## Example conversations
 
 See `example_conversations/` for transcripts demonstrating the diagnose →
-multiple-choice → recap loop, including a case where the student struggles
-repeatedly and the assistant steps back to a foundational concept.
+multiple-choice → recap loop.
 
