@@ -54,7 +54,7 @@ def get_client():
     if not api_key:
         st.error(
             "No Gemini API key found. Add GEMINI_API_KEY to your "
-            ".streamlit/secrets.toml file (see README)."
+            ".streamlit/secrets.toml file."
         )
         st.stop()
     return genai.Client(api_key=api_key)
@@ -150,7 +150,7 @@ with st.sidebar:
 # --- Render existing conversation ---
 if not st.session_state.messages:
     with st.chat_message("assistant"):
-        st.write(WELCOME_MESSAGE)
+        render_plain_text(WELCOME_MESSAGE)
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
