@@ -42,87 +42,49 @@ If you'd rather run it yourself or look at the code in action:
 
 ## Approach and key decisions
 
-**Diagnose before guiding, not just "give a hint."** Rather than reacting to
-whatever the student says with a generic prompt, the system prompt requires
-the model to first work out the correct solution privately, then diagnose
-*which specific step* the student's input suggests they're stuck on, before
-responding. This mirrors how a real tutor would approach a student who says
-"I don't get it": the first move is figuring out *what* they don't get, not
-guessing.
+**Diagnose before guiding, instead of just giving a hint.**  
+The assistant is instructed to first work out the correct solution privately, then use the student’s latest response to figure out what specific step they are struggling with. If a student says “I don’t get it,” the goal is not to immediately give another hint, but to first identify what exactly is causing the confusion.
 
-**Multiple-choice over open-ended questions.** Early versions of this prompt
-used open-ended guiding questions (e.g. "What do you think we should do
-first?"). In practice, student answers to open-ended questions are hard to
-diagnose reliably, since a vague or off-target answer doesn't tell you much.
-Multiple choice, where the wrong options are designed to reflect common
-misconceptions at that step, makes the student's specific error much easier
-to pinpoint, and turns every wrong answer into a diagnostic signal rather
-than a dead end.
+**Use multiple-choice questions instead of open-ended ones.**  
+Earlier versions used questions like “What do you think we should do first?” But open-ended answers were often too vague to tell what the student actually misunderstood. With multiple-choice questions, the wrong options can represent common mistakes, so the student’s choice gives the assistant more information about where the misunderstanding is.
 
-**Escalating to fundamentals when a student is stuck on the same type of
-step repeatedly.** A student who keeps missing "how to isolate a variable"
-across several attempts likely doesn't have an isolated procedural gap;
-they may not understand what an equation actually represents. The prompt
-instructs the model to recognize this pattern and temporarily step back to a
-more foundational question before returning to the original problem, rather
-than cycling through superficially different rephrasings of the same step.
+**Step back to fundamentals when the same difficulty keeps appearing.**  
+If a student repeatedly struggles with the same type of step, such as isolating a variable, the problem may be more basic than that one procedure. In that case, the assistant is told to briefly return to a more fundamental idea, such as what an equation represents, before coming back to the original problem.
 
-**Explicitly restating the current state of the problem at each step.**
-During testing, I noticed that once the conversation moved past 2-3 steps,
-it became hard to follow what the equation actually looked like at that
-point: the assistant would ask "what should we do to the right side?"
-without ever stating what the equation currently was. I updated the prompt
-to require the model to explicitly state the current form of the
-equation/expression after each operation, before presenting the next
-question, so a student isn't expected to track the arithmetic mentally on
-their own on top of the reasoning.
+**Restate the current form of the problem at each step.**  
+During testing, I found that after a few steps, it became easy to lose track of what the equation currently looked like. The assistant might ask what to do next without showing the updated equation. To avoid this, the prompt requires it to state the current equation or expression after each operation before asking the next question.
 
-**System prompt kept in a separate file, not embedded in the code.** The
-full system prompt lives in `system_prompt.md` rather than as a large string
-constant inside `app.py`. This keeps the prompt (which is the core design
-artifact of this project) readable on its own, versionable independently of
-application logic, and easy to iterate on without touching or risking
-breaking the Python code.
+**Keep the system prompt in a separate file.**  
+The full prompt is stored in `system_prompt.md` instead of directly inside `app.py`. This makes it easier to read and edit the prompt without mixing it with the application code.
 
-**Structured JSON output, enforced by the API, not just requested in the
-prompt.** The model is asked to return a JSON object with a `message` field
-and an `options` field (empty when there's no multiple-choice question). This
-is enforced via Gemini's `response_schema` / `response_mime_type` config,
-not just described in the prompt text, so the app can reliably parse it into
-a chat bubble and a set of clickable buttons rather than hoping the model's
-formatting is consistent.
+**Use structured JSON output enforced by the API.**  
+The model returns a JSON object with a `message` field and an `options` field. When there is no multiple-choice question, `options` is empty. This structure is enforced through Gemini’s `response_schema` and `response_mime_type`, so the app can reliably separate the chat response from the answer buttons.
 
-**Low temperature (0.4), not zero.** The assistant needs consistency (a
-wrong answer shouldn't get a wildly different diagnosis if the student
-rephrases slightly), but a small amount of variation keeps repeated
-follow-up questions from sounding robotic and identical every time.
+**Use a low temperature, but not zero.**  
+I set the temperature to 0.4 because the assistant should behave consistently, especially when diagnosing similar mistakes. At the same time, a small amount of variation helps keep repeated follow-up questions from sounding exactly the same.
 
-**Self-check before sending.** The prompt asks the model to verify its own
-math and confirm its multiple-choice options are logically sound (correct
-option genuinely correct, distractors genuinely wrong) before each response.
-This doesn't guarantee correctness, but reduces the risk of the model
-guiding a student toward the wrong step.
+**Ask the model to self-check before responding.**  
+Before sending each response, the prompt tells the model to check its math and make sure the multiple-choice options are valid: the correct answer should actually be correct, and the distractors should be clearly wrong. This cannot eliminate mistakes completely, but it helps reduce them.
 
 ## What to improve with more time
 
-- **Verify math correctness independently of the LLM.** Right now, the
-  assistant's math correctness depends entirely on the model's own reasoning
-  and self-check. For a production version, I'd add a lightweight symbolic
-  math check (e.g. with `sympy`) to verify the model's stated correct answer
-  and flag disagreements, rather than trusting the LLM's self-report.
-- **Persist sessions across reloads.** Conversation state currently lives in
-  Streamlit's `session_state`, so it resets if the browser tab is closed. A
-  real product would persist this (e.g. to a database) so a student could
-  resume a problem later.
-- **Track which misconceptions a student hits repeatedly across sessions**,
-  to give a teacher or the student themselves visibility into recurring
-  gaps, not just the current problem.
-- **Guardrails for off-topic or inappropriate input** beyond the current
-  simple redirect — e.g. detecting attempts to get the assistant to just
-  solve the problem outright through rephrased requests.
-- **Support image input** (e.g. a photo of a handwritten problem), using
-  Gemini's multimodal capabilities, since students often have a problem on
-  paper rather than typed out.
+- **Verify math correctness independently of the LLM.**  
+  Right now, the assistant relies on the model’s own reasoning and self-check for math correctness. In a production version, I would add a lightweight symbolic math check, such as `sympy`, to verify key calculations and flag cases where the model’s answer does not match the checker.
+
+- **Persist sessions across reloads.**  
+  Conversation history currently lives in Streamlit’s `session_state`, so it is lost when the browser session ends. A production version could store sessions in a database so students can return to a problem later and continue where they left off.
+
+- **Track recurring misconceptions across sessions.**  
+  The current version only responds to mistakes within the active conversation. A future version could keep track of concepts a student repeatedly struggles with and surface those patterns to the student or a teacher.
+
+- **Add stronger guardrails for off-topic or inappropriate input.**  
+  The current prompt includes a basic redirect, but a production version could handle cases such as repeated attempts to get the assistant to give away the full solution instead of working through the problem step by step.
+
+- **Support image input.**  
+  Students often have problems on paper rather than typed out, so a future version could use Gemini’s multimodal capabilities to accept photos of handwritten or printed math problems.
+
+- **Support LaTeX input and rendering.**  
+  Adding LaTeX support would make it easier for students to enter and read more complex mathematical expressions, such as fractions, exponents, square roots, and matrices, without relying on plain-text notation.
 
 ## A note on the model
 
