@@ -1,5 +1,5 @@
 """
-Student Coaching Assistant
+Math Coaching Assistant
 A math coaching assistant that guides high school students to solve problems
 themselves through diagnostic multiple-choice questions, rather than just
 giving them answers.
@@ -96,8 +96,8 @@ def call_assistant(client, messages):
 # Streamlit app
 # ---------------------------------------------------------------------------
 
-st.set_page_config(page_title="Student Coaching Assistant", page_icon="📐")
-st.title("📐 Student Coaching Assistant")
+st.set_page_config(page_title="Math Coaching Assistant", page_icon="📐")
+st.title("📐 Math Coaching Assistant")
 
 st.markdown(
     """
