@@ -21,13 +21,14 @@ prompts.
    
 ### Run it locally (optional)
 If you'd rather run it yourself or look at the code in action:
-1. Clone this repo and `cd` into it.
-2. Install dependencies:
+1. Get a free Gemini API key from [aistudio.google.com](https://aistudio.google.com)
+   (click "Get API key" → "Create API key").
+2. Clone this repo and `cd` into it.
+3. Install dependencies:
    ```
    pip install -r requirements.txt
    ```
-3. Get a free Gemini API key from [aistudio.google.com](https://aistudio.google.com)
-   (click "Get API key" → "Create API key").
+
 4. Copy the secrets template and add your key:
    ```
    cp .streamlit/secrets.toml.example .streamlit/secrets.toml
@@ -38,8 +39,7 @@ If you'd rather run it yourself or look at the code in action:
    ```
    streamlit run app.py
    ```
-6. Type a math problem into the chat box to start, or tell the assistant
-   what topic you're stuck on.
+
 
 ## Approach and key decisions
 
