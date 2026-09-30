@@ -99,6 +99,19 @@ def call_assistant(client, messages):
 st.set_page_config(page_title="Student Coaching Assistant", page_icon="📐")
 st.title("📐 Student Coaching Assistant")
 
+st.markdown(
+    """
+    <style>
+    div.stButton > button {
+        white-space: normal;
+        height: auto;
+        word-wrap: break-word;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # session_state["messages"] stores the full conversation for display purposes.
 if "messages" not in st.session_state:
     st.session_state.messages = []
