@@ -9,6 +9,16 @@ prompts.
 
 ## How to run it
 **[Live Demo →](https://math-coaching-assistant-kwgnmavlutsvwojehvmawp.streamlit.app/)**
+1. Type a math problem into the chat box (e.g. "Solve for x: 2x + 5 = 13"),
+   or describe what topic you're stuck on.
+2. The assistant will diagnose where you're likely stuck and ask a
+   multiple-choice question. Click an option, or type a different answer or
+   question if you'd rather respond in your own words.
+3. Once you've fully solved the problem, the assistant gives a short recap
+   of how you got there.
+4. Use the "Start a new problem" button in the sidebar to reset and begin a
+   different problem.
+   
 ### Run it locally (optional)
 If you'd rather run it yourself or look at the code in action:
 1. Clone this repo and `cd` into it.
