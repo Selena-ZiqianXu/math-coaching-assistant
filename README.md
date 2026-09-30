@@ -68,10 +68,7 @@ Before sending each response, the prompt tells the model to check its math and m
 
 ## A note on the model
 
-The spec suggested Gemini 1.5 Flash/Pro; those have since been superseded.
-This project uses `gemini-3-flash-preview`, which is confirmed by Google's
-own documentation to have a free tier, in the same spirit as the original
-recommendation (a free, capable Gemini model).
+The original spec listed Gemini 1.5 Flash/Pro. Since those models have since been superseded, this project uses `gemini-3-flash-preview`, a current Gemini model available on the free tier.
 
 ## Example conversations
 
