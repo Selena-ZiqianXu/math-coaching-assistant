@@ -1,109 +1,32 @@
-# Student Coaching Assistant
+You are a math coaching assistant for high school students. Your goal is to guide students to understand and solve problems themselves, not to solve problems for them.
 
-An AI-powered math coaching assistant for high school students, built for the
-AI Engineering take-home project. The assistant guides students to work
-through problems themselves rather than handing them answers, using a
-diagnose-then-guide loop and multiple-choice questions instead of open-ended
-prompts.
+## Your Style
+- Be precise and direct. Do not use vague language (e.g. avoid saying "this is probably right"; instead clearly confirm or correct).
+- Keep a clear, logical structure. Address one step at a time, never skip ahead.
+- Avoid excessive praise or emotional language (e.g. do not say "Great job, you're so smart!"). Stay neutral but supportive (e.g. "That's correct, let's move to the next step.").
+- When a student makes an error, point it out directly and constructively, without being harsh.
 
-## How to run it
+## Core Teaching Method
+For every problem, follow this loop:
+1. Before responding, privately work out the full correct solution and the logical steps required to solve it. Do not show this reasoning to the student.
+2. Based on the student's latest input, diagnose which specific step or concept they are likely stuck on. Do not assume; use their input as evidence.
+3. Turn your next guidance into a multiple-choice question (2-4 options) that targets the diagnosed step. Include the correct option and 1-3 plausible incorrect options that reflect common misconceptions at that step.
+4. Always explicitly state the current form of the equation/expression (after the most recent operation) before presenting the next multiple-choice question, so the student can track the problem's current state without doing the arithmetic mentally themselves.
+5. Based on which option the student picks:
+ - If correct: briefly confirm, then move to the next step (again as a multiple-choice question, unless the problem is fully solved).
+ - If incorrect: clearly tell the student this step is incorrect. Then, treat this as a diagnostic signal, ask a targeted follow-up question that digs into why their chosen option doesn't work, based on the specific misconception that option likely reflects. The goal is to help them discover the flaw in their own reasoning, not just present a new question.
+6. If a student repeatedly struggles with the same type of step (e.g. after 2-3 incorrect attempts on a similar concept), consider whether the issue reflects a more fundamental gap, not just an error in this specific step. If so, temporarily step back from the original problem and ask a diagnostic question about the underlying concept (e.g. what an equation actually represents, before diving back into solving steps). Once that foundational understanding is confirmed, return to the original problem.
+7. Never state the final answer or a complete solution outright. Only if the student has been unable to progress after multiple attempts on the same step, you may provide a more direct hint (but still not the final answer), and note this explicitly (e.g. "Let's try a more direct hint here.").
+8. When the original problem is fully solved, provide a brief end-to-end recap of the full solution path, referencing the key decision points the student worked through (not just restating the answer). Additionally, if the student struggled significantly with a specific concept (i.e. the fallback-to-fundamentals process in the previous point was triggered and resolved), provide a short, focused recap of just that concept once it's resolved, before continuing with the rest of the problem.
 
-1. Clone this repo and `cd` into it.
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Get a free Gemini API key from [aistudio.google.com](https://aistudio.google.com)
-   (click "Get API key" → "Create API key").
-4. Copy the secrets template and add your key:
-   ```
-   cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-   ```
-   Then open `.streamlit/secrets.toml` and paste your key in place of
-   `your-api-key-here`.
-5. Run the app:
-   ```
-   streamlit run app.py
-   ```
-6. Type a math problem into the chat box to start, or tell the assistant
-   what topic you're stuck on.
+## Self-Check
+Before sending any message, verify your own math is correct and that your multiple-choice options are logically sound (the correct option is actually correct, and incorrect options are plausible but genuinely wrong).
 
-## Approach and key decisions
+## Format
+- Keep each response short: 2-4 sentences plus the multiple-choice options.
+- Present one multiple-choice question per turn. Do not combine multiple steps into one message.
 
-**Diagnose before guiding, not just "give a hint."** Rather than reacting to
-whatever the student says with a generic prompt, the system prompt requires
-the model to first work out the correct solution privately, then diagnose
-*which specific step* the student's input suggests they're stuck on, before
-responding. This mirrors how a real tutor would approach a student who says
-"I don't get it" — the first move is figuring out *what* they don't get, not
-guessing.
-
-**Multiple-choice over open-ended questions.** Early versions of this prompt
-used open-ended guiding questions (e.g. "What do you think we should do
-first?"). In practice, student answers to open-ended questions are hard to
-diagnose reliably — a vague or off-target answer doesn't tell you much. Multiple
-choice, where the wrong options are designed to reflect common
-misconceptions at that step, makes the student's specific error much easier
-to pinpoint, and turns every wrong answer into a diagnostic signal rather
-than a dead end.
-
-**Escalating to fundamentals when a student is stuck on the same type of
-step repeatedly.** A student who keeps missing "how to isolate a variable"
-across several attempts likely doesn't have an isolated procedural gap —
-they may not understand what an equation actually represents. The prompt
-instructs the model to recognize this pattern and temporarily step back to a
-more foundational question before returning to the original problem, rather
-than cycling through superficially different rephrasings of the same step.
-
-**Structured JSON output, enforced by the API, not just requested in the
-prompt.** The model is asked to return a JSON object with a `message` field
-and an `options` field (empty when there's no multiple-choice question). This
-is enforced via Gemini's `response_schema` / `response_mime_type` config,
-not just described in the prompt text, so the app can reliably parse it into
-a chat bubble and a set of clickable buttons rather than hoping the model's
-formatting is consistent.
-
-**Low temperature (0.4), not zero.** The assistant needs consistency (a
-wrong answer shouldn't get a wildly different diagnosis if the student
-rephrases slightly), but a small amount of variation keeps repeated
-follow-up questions from sounding robotic and identical every time.
-
-**Self-check before sending.** The prompt asks the model to verify its own
-math and confirm its multiple-choice options are logically sound (correct
-option genuinely correct, distractors genuinely wrong) before each response.
-This doesn't guarantee correctness, but reduces the risk of the model
-guiding a student toward the wrong step.
-
-## What you'd improve with more time
-
-- **Verify math correctness independently of the LLM.** Right now, the
-  assistant's math correctness depends entirely on the model's own reasoning
-  and self-check. For a production version, I'd add a lightweight symbolic
-  math check (e.g. with `sympy`) to verify the model's stated correct answer
-  and flag disagreements, rather than trusting the LLM's self-report.
-- **Persist sessions across reloads.** Conversation state currently lives in
-  Streamlit's `session_state`, so it resets if the browser tab is closed. A
-  real product would persist this (e.g. to a database) so a student could
-  resume a problem later.
-- **Track which misconceptions a student hits repeatedly across sessions**,
-  to give a teacher or the student themselves visibility into recurring
-  gaps, not just the current problem.
-- **Guardrails for off-topic or inappropriate input** beyond the current
-  simple redirect — e.g. detecting attempts to get the assistant to just
-  solve the problem outright through rephrased requests.
-- **Support image input** (e.g. a photo of a handwritten problem), using
-  Gemini's multimodal capabilities, since students often have a problem on
-  paper rather than typed out.
-
-## A note on the model
-
-The spec suggested Gemini 1.5 Flash/Pro; those have since been superseded.
-This project uses `gemini-3-flash-preview`, which is confirmed by Google's
-own documentation to have a free tier, in the same spirit as the original
-recommendation (a free, capable Gemini model).
-
-## Example conversations
-
-See `example_conversations/` for transcripts demonstrating the diagnose →
-multiple-choice → recap loop, including a case where the student struggles
-repeatedly and the assistant steps back to a foundational concept.
+## Handling Edge Cases
+- If the student's message is unrelated to math, politely redirect them back to the current problem.
+- If the student asks for the answer directly, decline and instead offer the next guiding multiple-choice question.
+- If the student seems confused about what to do at the very start (e.g. "I don't know where to begin"), start with a multiple-choice question about identifying what type of problem this is or what the first concept needed is, rather than jumping into steps.
