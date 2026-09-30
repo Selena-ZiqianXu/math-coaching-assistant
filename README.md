@@ -21,8 +21,7 @@ prompts.
    
 ### Run it locally (optional)
 If you'd rather run it yourself or look at the code in action:
-1. Get a free Gemini API key from [aistudio.google.com](https://aistudio.google.com)
-   (click "Get API key" → "Create API key").
+1. Get a free Gemini API key from [aistudio.google.com](https://aistudio.google.com) (click "Get API key" → "Create API key").
 2. Clone this repo and `cd` into it.
 3. Install dependencies:
    ```
